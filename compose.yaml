@@ -21,6 +21,9 @@ services:
             - '.:/var/www/html'
         networks:
             - sail
+            - shared-net
 networks:
     sail:
         driver: bridge
+    shared-net:
+        external: true

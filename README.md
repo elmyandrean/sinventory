@@ -1,146 +1,200 @@
-# SInventory (Sistem Inventory dengan Forecasting)
+# SInventory 📦
+### *Smart Inventory Management & Demand Forecasting Decision Support System*
 
-Aplikasi manajemen inventaris gudang komprehensif yang dibangun menggunakan **Laravel 11** dan **Filament PHP**. Aplikasi ini tidak hanya berfungsi untuk mencatat keluar-masuknya barang, tetapi juga dilengkapi dengan fitur analitik cerdas berbasis *Simple Moving Average* untuk mengestimasi (forecasting) kebutuhan pengadaan barang di masa depan.
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![Filament](https://img.shields.io/badge/Filament-v3-F59E0B?style=for-the-badge&logo=livewire&logoColor=white)](https://filamentphp.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Sail-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![PHPUnit](https://img.shields.io/badge/Testing-PHPUnit%20100%25-green?style=for-the-badge&logo=php&logoColor=white)](https://phpunit.de)
 
----
-
-## ✨ Fitur Utama
-
-1. **Manajemen Role & User (Spatie Permission)**
-   - Pembatasan hak akses berbasis peran.
-   - **Manager/Admin**: Akses penuh ke seluruh sistem, termasuk pengaturan *user*, master data, dan laporan *forecasting*.
-   - **Staff Gudang**: Akses operasional harian untuk kelola barang, serta mencatat transaksi masuk/keluar.
-
-2. **Master Data Inventory**
-   - Pengelolaan kategori dan barang (SKU, Nama, Satuan, Stok Minimal).
-   - Pemantauan metrik stok otomatis (*current stock*).
-
-3. **Transaksi & Kartu Stok (Inbound / Outbound)**
-   - **Barang Masuk (Inbound)**: Pencatatan pasokan dari supplier.
-   - **Barang Keluar (Outbound)**: Pencatatan pengeluaran barang dari gudang.
-   - **Real-time Update**: Terintegrasi dengan *Laravel Observers* untuk memperbarui stok barang secara otomatis di setiap transaksi.
-
-4. **Forecasting (Estimasi Pengadaan)**
-   - Prediksi kebutuhan belanja barang di masa depan.
-   - Menggunakan metode statistik *Simple Moving Average* berdasarkan riwayat pergerakan *Outbound* dari bulan-bulan sebelumnya.
-   - Alert otomatis jika stok suatu barang mendekati atau berada di bawah batas minimum (*Reorder Point*).
-
-5. **Dashboard & Laporan Eksekutif**
-   - *Widgets* visual yang menampilkan metrik utama (Barang Terlaris, Stok Kritis, Total Transaksi).
+**SInventory** adalah sistem manajemen inventaris gudang enterprise yang dirancang tidak hanya untuk mencatat arus mutasi barang, melainkan juga berfungsi sebagai **Sistem Pendukung Keputusan (*Decision Support System*)** pengadaan barang logistik berbasis peramalan statistik **Simple Moving Average (SMA)**.
 
 ---
 
-## 🛠 Teknologi (Tech Stack)
+## 📌 Latar Belakang & Masalah (Problem Statement)
 
-Proyek ini dibangun di atas infrastruktur web modern (TALL Stack) untuk memastikan UI/UX yang premium dan performa tinggi:
-
-- **Framework**: Laravel 11 (PHP 8.2+)
-- **Admin Panel & UI**: Filament PHP v3
-- **Frontend Stack**: Tailwind CSS, Alpine.js, Livewire
-- **Database**: PostgreSQL
-- **Infrastruktur**: Docker (via Laravel Sail)
+Dalam pengelolaan inventaris dan rantai pasok (*supply chain*), perusahaan dan UMKM kerap menghadapi tantangan klasik:
+1. **Risiko Overstocking (Penumpukan Modal):** Pembelian barang logistik yang berlebihan karena estimasi intuitif tanpa data historis, mengakibatkan gudang penuh dan perputaran modal kerja mandek.
+2. **Risiko Stockout (Kehabisan Barang):** Terlambat menyadari bahwa persediaan barang operasional penting menipis, sehingga menghambat produktivitas dan operasional kantor.
+3. **Ketidaksinkronan Catatan Stok (Human Error):** Mutasi barang masuk dan keluar yang dicatat manual seringkali memicu stok minus atau selisih data antara fisik gudang dan pembukuan.
 
 ---
 
-## 🗄️ Rancangan Database (ERD)
+## 💡 Solusi yang Dihadirkan (The Solution)
 
-Berikut adalah struktur entitas utama di dalam database sistem:
+**SInventory** menyelesaikan permasalahan tersebut melalui pendekatan arsitektur modern dan analitik data:
+- **Otomatisasi Mutasi & Pencegahan Stok Minus:** Menggunakan **Laravel Observer Pattern** untuk memutasi stok secara atomik dan *real-time*. Sistem secara otomatis membatalkan transaksi keluar (*Outbound*) jika stok fisik tidak mencukupi serta mendukung *auto-rollback* stok saat transaksi dihapus.
+- **Prediksi Kebutuhan Pengadaan (Simple Moving Average Engine):** Menganalisis histori pemakaian hingga 5 tahun ke belakang untuk memprediksi estimasi kebutuhan bulan berikutnya dan menghitung kuantitas rekomendasi restock otomatis.
+- **Fleksibilitas Parameter Jendela (Customizable SMA Window):** Memungkinkan manajer logistik menyesuaikan jendela pengamatan (2 bulan, 3 bulan standar, 6 bulan, hingga 12 bulan) dengan penjelasan edukatif mengenai sensitivitas data.
+- **Visibilitas Valuasi Finansial Aset:** Dashboard real-time yang menghitung total nilai aset gudang ($\sum \text{stok} \times \text{harga beli}$) serta memberikan peringatan dini (*early warning indicator*) untuk barang yang menipis ($\le 5$ unit).
+
+---
+
+## ✨ Fitur-Fitur Utama
+
+### 1. 📊 Executive Dashboard & Real-Time Analytics
+- **Kartu Metrik Finansial:** Total barang, total kategori, valuasi total aset dalam Rupiah, dan rekap mutasi bulanan.
+- **Indikator Stok Kritis (Warning Badge):** Mendeteksi barang dengan stok menipis secara otomatis.
+- **Interactive Mutasi Trend Chart:** Grafik garis interaktif 12 bulan terakhir yang membandingkan tren Inbound vs Outbound.
+- **Demand Forecasting Chart:** Grafik kombinasi Bar (aktual) dan Dashed Line (SMA) dengan filter interaktif per barang, jendela perhitungan (2-12 bulan), dan rentang waktu (1-5 tahun).
+
+### 2. 📦 Master Data & Relasi Terintegrasi
+- **Manajemen Kategori:** Auto-slug generator dan *badge* counter total barang per kategori.
+- **Manajemen Barang (Items):** SKU unik, satuan kustom, harga beli, harga jual, dan status warna stok otomatis (*Merah: Habis, Kuning: Menipis $\le 5$, Hijau: Aman*).
+- **Fast Input (Create on the fly):** Tambah kategori baru langsung dari modal form barang.
+
+### 3. 🔄 Modul Transaksi (Inbound & Outbound)
+- Pencatatan transaksi barang masuk (*restock supplier*) dan barang keluar (*distribusi operasional*).
+- Pencatatan otomatis staf/admin yang bertanggung jawab atas transaksi.
+- Filter rentang tanggal (*Date Range Picker*) dan filter tipe transaksi.
+
+### 4. 🛡️ Role & Hak Akses (RBAC)
+- Didukung oleh `spatie/laravel-permission` dengan pemisahan peran (`admin` dan `staff`).
+- Perlindungan panel menggunakan kontrak `FilamentUser`.
+
+---
+
+## 🏗️ Arsitektur & Pola Desain (System Architecture)
+
+```mermaid
+flowchart TD
+    User([Pengguna / Staff]) <--> UI[Filament Admin Panel v3]
+    
+    subgraph Core Application Layer
+        UI <--> Controllers[Filament Resources & Pages]
+        Controllers <--> Services[ForecastingService - Logika SMA]
+        Controllers <--> Models[Eloquent Models: Item, Category, Transaction]
+        
+        Models -.-> Observers[TransactionObserver]
+        Observers -->|Validasi & Auto Update Stok| Models
+    end
+    
+    subgraph Data Layer
+        Models <--> DB[(PostgreSQL Database)]
+    end
+```
+
+### Pola Desain Unggulan:
+- **Service Layer Pattern:** Seluruh perhitungan matematika statistik diisolasi di `App\Services\ForecastingService` sehingga *controller/widget* tetap bersih (*Separation of Concerns*).
+- **Observer Pattern:** Pengurangan, penambahan, dan *rollback* stok dipusatkan di `App\Observers\TransactionObserver`, menjamin konsistensi data dari mana pun transaksi dibuat (UI, API, atau Seeder).
+- **Defensive Database Handling:** Mekanisme `lockForUpdate()` dan pengecekan stok mencegah kondisi *race condition* dan *negative stock*.
+
+---
+
+## 🗄️ Relasi Database (ERD)
 
 ```mermaid
 erDiagram
-    USERS ||--o{ INBOUNDS : "mencatat"
-    USERS ||--o{ OUTBOUNDS : "mencatat"
-    ROLES ||--o{ USERS : "memiliki"
-    
+    USERS ||--o{ TRANSACTIONS : "mencatat"
     CATEGORIES ||--o{ ITEMS : "mengelompokkan"
-    
-    ITEMS ||--o{ INBOUNDS : "menerima"
-    ITEMS ||--o{ OUTBOUNDS : "mengeluarkan"
+    ITEMS ||--o{ TRANSACTIONS : "bermutasi pada"
 
     USERS {
-        int id PK
+        bigint id PK
         string name
         string email
         string password
     }
-    
+
     CATEGORIES {
-        int id PK
+        bigint id PK
         string name
-        string description
+        string slug UK
+        text description
     }
-    
+
     ITEMS {
-        int id PK
-        int category_id FK
-        string sku
+        bigint id PK
+        bigint category_id FK
+        string sku UK
         string name
+        int stock
         string unit
-        int minimum_stock
-        int current_stock
+        decimal purchase_price
+        decimal selling_price
     }
-    
-    INBOUNDS {
-        int id PK
-        int item_id FK
-        int user_id FK
-        string supplier
+
+    TRANSACTIONS {
+        bigint id PK
+        bigint user_id FK
+        bigint item_id FK
+        string type "enum: in, out"
         int quantity
         date transaction_date
-    }
-    
-    OUTBOUNDS {
-        int id PK
-        int item_id FK
-        int user_id FK
-        string recipient
-        int quantity
-        date transaction_date
+        text notes
     }
 ```
 
 ---
 
-## 🚀 Panduan Instalasi (Lokal / Development)
+## 🛠️ Tech Stack
 
-Karena proyek ini dibangun menggunakan Docker (Laravel Sail) dan terhubung dengan PostgreSQL eksternal, ikuti langkah berikut:
+- **Backend Framework:** [Laravel 11.x](https://laravel.com)
+- **Admin Panel & State:** [Filament PHP v3](https://filamentphp.com) (TALL Stack: Tailwind CSS, Alpine.js, Laravel, Livewire)
+- **Database:** [PostgreSQL 16](https://www.postgresql.org)
+- **Containerization:** [Docker & Laravel Sail](https://laravel.com/docs/11.x/sail)
+- **Testing Engine:** [PHPUnit](https://phpunit.de) (Feature & Unit Tests 100% Passed)
 
-1. **Clone Repositori**
-   ```bash
-   git clone git@github.com:elmyandrean/sinventory.git
-   cd sinventory
-   ```
+---
 
-2. **Konfigurasi Lingkungan (.env)**
-   Salin `.env.example` ke `.env` dan konfigurasikan bagian koneksi Database agar mengarah ke PostgreSQL Anda:
-   ```env
-   DB_CONNECTION=pgsql
-   DB_HOST=172.19.0.2   # Sesuaikan dengan IP Container PostgreSQL Anda
-   DB_PORT=5432
-   DB_DATABASE=sinventory
-   DB_USERNAME=postgres
-   DB_PASSWORD=admin
-   ```
+## 🚀 Panduan Menjalankan Proyek (Local Development)
 
-3. **Instalasi Dependensi**
-   Jika Composer sudah terinstal di OS Anda:
-   ```bash
-   composer install
-   ```
+### 1. Klon Repositori
+```bash
+git clone git@github.com:elmyandrean/sinventory.git
+cd sinventory
+```
 
-4. **Generate App Key**
-   ```bash
-   php artisan key:generate
-   ```
+### 2. Salin Konfigurasi Environment
+```bash
+cp .env.example .env
+```
+Sesuaikan konfigurasi koneksi database di `.env` (secara default diarahkan ke PostgreSQL).
 
-5. **Menjalankan Aplikasi (Docker/Sail)**
-   ```bash
-   ./vendor/bin/sail up -d
-   ```
+### 3. Install Dependensi & Generate App Key
+```bash
+composer install
+php artisan key:generate
+```
 
-6. **Migrasi Database & Seeder**
-   ```bash
-   ./vendor/bin/sail artisan migrate --seed
-   ```
+### 4. Jalankan Container Docker (Laravel Sail)
+```bash
+./vendor/bin/sail up -d
+```
 
-Aplikasi kini dapat diakses di browser pada alamat `http://localhost`.
+### 5. Eksekusi Migrasi & Simulasi Transaksi (5 Tahun)
+```bash
+# Jalankan migrasi dan seeder akun admin awal
+./vendor/bin/sail artisan migrate --seed
+
+# (Opsional) Jalankan simulasi transaksi 5 tahun untuk analitik peramalan
+./vendor/bin/sail artisan db:seed --class=TransactionSimulationSeeder
+```
+
+### 6. Akses Panel Admin
+Buka browser dan arahkan ke: **[http://localhost/admin](http://localhost/admin)**
+
+**Kredensial Login Default:**
+- **Email:** `admin@sinventory.test`
+- **Password:** `password`
+
+---
+
+## 🧪 Pengujian Otomatis (Automated Testing)
+
+Proyek ini telah dilengkapi automated test untuk menguji keabsahan alur transaksi dan algoritma peramalan:
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+**Skenario Uji yang Dicakup:**
+- `TransactionObserverTest`: Uji penambahan stok (*Inbound*), pengurangan stok (*Outbound*), penolakan transaksi jika stok tidak cukup, dan *rollback* stok saat transaksi dihapus.
+- `ForecastingServiceTest`: Uji akurasi rumus *Simple Moving Average (SMA)* pada data historis.
+
+---
+
+## 👨‍💻 Author
+
+Dikembangkan oleh **Elmy Andrean**  
+Sebagai proyek portofolio demonstrasi implementasi sistem inventaris cerdas berbasis data science dan arsitektur web modern.
